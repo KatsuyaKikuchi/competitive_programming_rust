@@ -1,0 +1,2 @@
+# competitive_programming_rust
+ Rust競技プログラミング用プロジェクト
