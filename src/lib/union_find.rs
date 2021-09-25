@@ -78,6 +78,6 @@ mod tests {
         uf.unit(0, 2);
         assert_eq!(uf.same(1, 3), true);
 
-        assert_eq!(uf.group(), vec![vec![0, 1, 2, 3], vec![5]]);
+        assert_eq!(uf.group(), vec![vec![0, 1, 2, 3], vec![4]]);
     }
 }
