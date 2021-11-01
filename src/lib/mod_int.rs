@@ -1,5 +1,3 @@
-use std::ops;
-
 pub mod mod_int {
     type ModInternalType = i64;
 
@@ -30,7 +28,30 @@ pub mod mod_int {
                 value: v
             }
         }
+
+        pub fn pow<T: ToInternalNum>(&self, e: T) -> Self {
+            let mut res = 1i64;
+            let mut p = self.value;
+            let mut e = e.to_internal_num();
+            let modulo = ModInt::MOD;
+            while e > 0 {
+                if (e & 1) == 1 {
+                    res = (res * p) % modulo;
+                }
+                e >>= 1;
+                p = (p * p) % modulo;
+            }
+            Self::new(res)
+        }
     }
+
+    impl Clone for ModInt {
+        fn clone(&self) -> Self {
+            Self::new(self.value)
+        }
+    }
+
+    impl Copy for ModInt {}
 
     // 整数型をModIntとの演算に使用できるようにするためのトレイト
     pub trait ToInternalNum {
@@ -54,6 +75,9 @@ pub mod mod_int {
     }
 
     impl_primitive!(i32);
+    impl_primitive!(u32);
+    impl_primitive!(i64);
+    impl_primitive!(u64);
 
     // 四則演算
     impl<T: ToInternalNum> std::ops::AddAssign<T> for ModInt {
@@ -72,9 +96,81 @@ pub mod mod_int {
 
     impl<T: ToInternalNum> std::ops::Add<T> for ModInt {
         type Output = Self;
-        fn add(self, other: T) -> Self {
+        fn add(self, rhs: T) -> Self {
             let mut res = self;
-            res += other;
+            res += rhs;
+            res
+        }
+    }
+
+    impl<T: ToInternalNum> std::ops::SubAssign<T> for ModInt {
+        fn sub_assign(&mut self, rhs: T) {
+            let mut rhs = rhs.to_internal_num();
+            let modulo = ModInt::MOD;
+            if rhs >= modulo {
+                rhs %= modulo;
+            }
+            if rhs > 0 {
+                self.value += modulo - rhs;
+            }
+            if self.value >= modulo {
+                self.value -= modulo;
+            }
+        }
+    }
+
+    impl<T: ToInternalNum> std::ops::Sub<T> for ModInt {
+        type Output = Self;
+        fn sub(self, rhs: T) -> Self::Output {
+            let mut res = self;
+            res -= rhs;
+            res
+        }
+    }
+
+    impl<T: ToInternalNum> std::ops::MulAssign<T> for ModInt {
+        fn mul_assign(&mut self, rhs: T) {
+            let mut rhs = rhs.to_internal_num();
+            let modulo = ModInt::MOD;
+            if rhs >= modulo {
+                rhs %= modulo;
+            }
+            self.value *= rhs;
+            if self.value >= modulo {
+                self.value %= modulo;
+            }
+        }
+    }
+
+    impl<T: ToInternalNum> std::ops::Mul<T> for ModInt {
+        type Output = Self;
+        fn mul(self, rhs: T) -> Self::Output {
+            let mut res = self;
+            res *= rhs;
+            res
+        }
+    }
+
+    impl<T: ToInternalNum> std::ops::DivAssign<T> for ModInt {
+        fn div_assign(&mut self, rhs: T) {
+            let mut rhs = rhs.to_internal_num();
+            let modulo = ModInt::MOD;
+            if rhs >= modulo {
+                rhs %= modulo;
+            }
+            let inv = Self::new(rhs).pow(modulo - 2);
+            self.value *= inv.value;
+            if self.value >= modulo {
+                self.value %= modulo;
+            }
+        }
+    }
+
+    impl<T: ToInternalNum> std::ops::Div<T> for ModInt {
+        type Output = Self;
+        fn div(self, rhs: T) -> Self::Output {
+            let mut res = self;
+            res /= rhs;
             res
         }
     }
@@ -82,6 +178,7 @@ pub mod mod_int {
 
 #[cfg(test)]
 mod tests {
+    use crate::lib::mod_int::mod_int::ModInt;
     use super::*;
 
     #[test]
@@ -90,6 +187,18 @@ mod tests {
         assert_eq!(a.value, 10);
         let mut b = mod_int::ModInt::new(-1);
         assert_eq!(b.value, mod_int::ModInt::MOD - 1);
-        assert_eq!((a + b).value, 9)
+        assert_eq!((a + b).value, 9);
+        assert_eq!((a + 10).value, 20);
+        assert_eq!((b + 10).value, 9);
+
+        a += 30;
+        assert_eq!(a.value, 40);
+        a += b;
+        assert_eq!(a.value, 39);
+
+        let c = a.pow(2);
+        assert_eq!(c.value, 1521);
+        let c = a.pow(6);
+        assert_eq!(c.value, 3518743761 % ModInt::MOD);
     }
 }
