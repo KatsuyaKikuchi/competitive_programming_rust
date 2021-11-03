@@ -185,20 +185,29 @@ mod tests {
     fn mod_int_works() {
         let mut a = mod_int::ModInt::new(10);
         assert_eq!(a.value, 10);
-        let mut b = mod_int::ModInt::new(-1);
+        let b = mod_int::ModInt::new(-1);
         assert_eq!(b.value, mod_int::ModInt::MOD - 1);
         assert_eq!((a + b).value, 9);
-        assert_eq!((a + 10).value, 20);
-        assert_eq!((b + 10).value, 9);
-
         a += 30;
         assert_eq!(a.value, 40);
         a += b;
         assert_eq!(a.value, 39);
+        a -= b;
+        assert_eq!(a.value, 40);
+        a -= 30;
+        assert_eq!(a.value, 10);
+        a *= 10;
+        assert_eq!(a.value, 100);
+        a *= b;
+        assert_eq!(a.value, (100 * (ModInt::MOD - 1)) % ModInt::MOD);
+        a /= b;
+        assert_eq!(a.value, 100);
+        a /= 10;
+        assert_eq!(a.value, 10);
 
         let c = a.pow(2);
-        assert_eq!(c.value, 1521);
-        let c = a.pow(6);
-        assert_eq!(c.value, 3518743761 % ModInt::MOD);
+        assert_eq!(c.value, 100);
+        let c = a.pow(12);
+        assert_eq!(c.value, 1000000000000i64 % ModInt::MOD);
     }
 }
